@@ -44,14 +44,7 @@ def patient_post(recieved : Patient):
 
 @app.get('/patient/{pk}', response_model=Patient)
 def patient_get(pk: int):
-	if pk in app.patients.keys():
+	try:
 		return app.patients[pk]
-	else:
-		raise HTTPException(204, "No such patient!")
-
-app.post("/patient")
-patient_post({"name": "Tom", "surname": "Hanks"})
-print(app.counter)
-print(app.patients)
-
-patient_get(100)
+	except:
+		raise HTTPException(204,"No such patient!")
