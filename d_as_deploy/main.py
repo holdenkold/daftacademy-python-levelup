@@ -1,6 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
+app.counter = 0
+app.patients = dict()
+
+
+class Patient(BaseModel):
+	name: str
+	surname: str
+
+class Response(BaseModel):
+	id : int = 0
+	patient : Patient
+
+
 
 @app.get('/')
 def hello_world():
@@ -21,3 +35,23 @@ def method_put():
 @app.delete('/method')
 def method_delete():
 	return {"method": "DELETE"}
+
+@app.post('/patient', response_model = Response)
+def patient_post(recieved : Patient):
+	app.counter+=1
+	app.patients[app.counter] = Patient
+	return Response(id = app.counter, patient = recieved)
+
+@app.get('/patient/{pk}', response_model=Patient)
+def patient_get(pk: int):
+	if pk in app.patients.keys():
+		return app.patients[pk]
+	else:
+		raise HTTPException(204, "No such patient!")
+
+app.post("/patient")
+patient_post({"name": "Tom", "surname": "Hanks"})
+print(app.counter)
+print(app.patients)
+
+patient_get(100)
