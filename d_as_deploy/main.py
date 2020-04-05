@@ -2,9 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
-app.counter = 0
+app.counter = -1
 app.patients = dict()
-
 
 class Patient(BaseModel):
 	name: str
@@ -13,8 +12,6 @@ class Patient(BaseModel):
 class Response(BaseModel):
 	id : int = 0
 	patient : Patient
-
-
 
 @app.get('/')
 def hello_world():
