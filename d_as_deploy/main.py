@@ -8,7 +8,7 @@ app.patients = dict()
 
 class Patient(BaseModel):
 	name: str
-	surname: str
+	surename: str
 
 class PatientResponse(BaseModel):
 	id : int = 0

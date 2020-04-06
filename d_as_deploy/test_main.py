@@ -40,7 +40,7 @@ def test_method_delete():
     assert response.json() == {"method": "DELETE"}
 
 
-@pytest.mark.parametrize("recieved", [{"name": "Tom", "surname": "Hanks"}, {"name": "Charles", "surname": "Windsor"}, {"name": "Boris", "surname": "Johnson"}])
+@pytest.mark.parametrize("recieved", [{"name": "Tom", "surename": "Hanks"}, {"name": "Charles", "surename": "Windsor"}, {"name": "Boris", "surename": "Johnson"}])
 def test_patient_post(recieved):
     response = client.post("/patient", json=recieved)
     assert response.status_code == 200
