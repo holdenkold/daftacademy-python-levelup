@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from fastapi import HTTPException
 from main import app
 import pytest
+from fastapi.responses import Response
 
 client = TestClient(app)
 client.id = -1
@@ -48,12 +49,13 @@ def test_patient_post(recieved):
     assert response.json() == {"id": client.id, "patient": recieved}
 
 
-@pytest.mark.parametrize("pk", ['0', '1', '2', '100'])
+@pytest.mark.parametrize("pk", ['0', '1', '2'])
 def test_patient_get(pk: int):
     if pk not in client.patients:
-        with pytest.raises(HTTPException):
-            assert client.get("/patient/{0}".format(pk))
+        assert Response(status_code = 204) == client.get("/patient/{0}".format(pk))
+    else:
+        response = client.get("/patient/{0}".format(pk))
+        assert response.status_code == 200
+        assert response.text == client.patients[pk]
 
-    response = client.get("/patient/{0}".format(pk))
-    assert response.status_code == 200
-    assert response.text == client.patients[pk]
+    
