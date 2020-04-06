@@ -33,11 +33,12 @@ def method_put():
 def method_delete():
 	return {"method": "DELETE"}
 
-@app.post('/patient', response_model = Response)
+@app.post('/patient')
 def patient_post(recieved : Patient):
 	app.counter+=1
-	app.patients[app.counter] = Patient
-	return Response(id = app.counter, patient = recieved)
+	app.patients[app.counter] = recieved
+	return {"id" : app.counter, "patient" : recieved}
+	# return Response(id = app.counter, patient = recieved)
 
 @app.get('/patient/{pk}', response_model=Patient)
 def patient_get(pk: int):
@@ -45,3 +46,5 @@ def patient_get(pk: int):
 		return app.patients[pk]
 	except:
 		raise HTTPException(204,"No such patient!")
+
+	
