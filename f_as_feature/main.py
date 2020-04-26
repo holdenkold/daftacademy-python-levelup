@@ -4,6 +4,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import json
 from functools import wraps
 from hashlib import sha256
+from jinja2 import Template
 
 app = FastAPI()
 security = HTTPBasic()
@@ -21,6 +22,9 @@ class Credentials:
 	
 	def get_session_token(self):
 		return app.session_token(self.__dict__['login'], self.__dict__['password'])
+
+	def get_user(self):
+		return self.__dict__['login']
 
 cr = Credentials()
 
@@ -41,7 +45,8 @@ def root():
 @app.get('/welcome')
 @login_required
 def welcome(request : Request):
-	return {"message" : "Welcome sweety ^.^"}	
+	t = Template('Hello, {{ user }}!')
+	return t.render(user=cr.get_user())
 
 
 @app.get('/login')
