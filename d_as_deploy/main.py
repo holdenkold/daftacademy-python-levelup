@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from fastapi.responses import Response
+from fastapi.responses import Response, Request
 
 app = FastAPI()
 app.counter = -1
@@ -18,34 +18,18 @@ class PatientResponse(BaseModel):
 def hello_world():
 	return {"message" : "Hello World during the coronavirus pandemic!"}
 
-@app.get('/method')
-def method_get():
-	return {"method": "GET"}
-
-@app.post('/method')
-def method_post():
-	return {"method": "POST"}
-
-@app.put('/method')
-def method_put():
-	return {"method": "PUT"}
-
-@app.delete('/method')
-def method_delete():
-	return {"method": "DELETE"}
+@app.api_route(path="/method", methods=["GET", "POST", "PUT", "DELETE"])
+def show_method(request: Request):
+	return {"method": request.method}
 
 @app.post('/patient')
 def patient_post(patient : Patient):
 	app.counter+=1
 	app.patients[app.counter] = patient
 	return {"id" : app.counter, "patient" : patient}
-	# return Response(id = app.counter, patient = recieved)
 
 @app.get('/patient/{pk}', response_model=Patient)
 def patient_get(pk: int):
-	try:
+	if pk in app.patients:
 		return app.patients[pk]
-	except:
-		return Response(status_code = 204)
-
-	
+	return Response(status_code = 204)	
