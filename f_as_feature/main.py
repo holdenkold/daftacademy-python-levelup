@@ -8,6 +8,7 @@ from hashlib import sha256
 app = FastAPI()
 security = HTTPBasic()
 app.secret_key = "dXNlcl9uYW1lOnBhc3N3b3Jk"
+# app.allowed_user_hash = sha256(bytes(f"{LOGIN}{PASS}{app.secret_key}",encoding='utf8')).hexdigest()
 app.session_token = lambda username, password: sha256(bytes(f"{username}{password}{app.secret_key}", encoding='utf8')).hexdigest()
 
 class Credentials:
@@ -48,7 +49,6 @@ def welcome(request : Request):
 def login(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
 	if cr.verify(credentials.username, credentials.password):
 		session_token = app.session_token(credentials.username, credentials.password)
-		response.set_cookie(key='session_token',value=app.allowed_user_hash)
 		response.set_cookie(key="session_token",value=session_token)
 		response.status_code = 302
 		response.headers['Location'] = '/welcome'
