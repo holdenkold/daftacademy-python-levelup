@@ -4,13 +4,14 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 from functools import wraps
 from hashlib import sha256
-from jinja2 import Template, Environment, FileSystemLoader
+from fastapi.templating import Jinja2Templates
 import json
 
 app = FastAPI()
 security = HTTPBasic()
 app.secret_key = "dXNlcl9uYW1lOnBhc3N3b3Jk"
 app.session_token = lambda username, password: sha256(bytes(f"{username}{password}{app.secret_key}", encoding='utf8')).hexdigest()
+template = Jinja2Templates(directory="templates")
 app.counter = -1
 app.patients = dict()
 
@@ -55,10 +56,7 @@ def root():
 @app.get('/welcome')
 @login_required
 def welcome(request : Request):
-	file_loader = FileSystemLoader('templates')
-	env = Environment(loader=file_loader)
-	template = env.get_template('welcome.html')
-	return template.render( user=cr.get_user())
+	return template.TemplateResponse(name = 'welcome.html', context={"request":request,'user' : cr.get_user()})
 
 @app.post('/login')
 def login(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
@@ -84,25 +82,30 @@ def patient_post(patient : Patient, response: Response):
 	app.counter+=1
 	app.patients[app.counter] = patient
 	response.headers['Location'] = f'/patient/{app.counter}'
-	return {"id" : app.counter, "patient" : patient}
+	response.status_code=302
+	return response
 
 @app.get('/patient/')
 @login_required
-def patients_get(pk: int):
-	response = dict()
+def patients_get(response: Response):
+	if not len(app.patients):
+		return Response(status_code = 204)	
+
+	people = dict()
 	for id, p in app.patients.items():
-		response[f'id_{id}'] = p
-	return response
+		people[f'id_{id}'] = p
+	return people
 
 @app.get('/patient/{pk}', response_model=Patient)
 @login_required
-def patient_get(pk: int):
+def patient_get(response: Response, pk: int):
 	if pk in app.patients:
 		return app.patients[pk]
 	return Response(status_code = 204)	
 
 @app.delete('/patient/{pk}')
 @login_required
-def patient_delete(pk: int):
-	app.counter-=1
-	del app.patients[app.counter] 
+def patient_delete(response: Response, pk: int):
+	app.patients.pop(pk, None)
+	response.headers["Location"]="/patient"
+	return Response(status_code = 204)
