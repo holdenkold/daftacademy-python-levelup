@@ -89,11 +89,12 @@ async def get_statistics_by_category(category:str, status_code=200):
         ''').fetchall()
     elif category == 'genres':
         data = app.db_connection.execute('''
-        SELECT c.CustomerId, c.Email, c.Phone, round(sum(i.Total), 2) as Sum FROM customers as c
-        JOIN invoice as i ON i.CustomerId = c.CustomerId
-        group by CustomerId
-        ORDER BY Sum DESC, c.CustomerId;
+        SELECT g.Name, sum(ii.Quantity) as Sum FROM genres as g
+        JOIN tracks as t ON t.GenreId = g.GenreId
+        JOIN invoice_items as ii ON t.TrackId = ii.TrackId
+        group by g.GenreId
+        ORDER BY Sum DESC, g.Name;
         ''').fetchall()
     else:
-        return JSONResponse(status_code=404, content={'detail': {'error': f'Unnown category'}}) 
+        return JSONResponse(status_code=404, content={'detail': {'error': f'Unknown category'}}) 
     return data
