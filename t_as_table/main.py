@@ -30,14 +30,14 @@ async def shutdown():
 def hello_world():
 	return {'message' : 'Hello World!'}
 
-# first part 
+# 1 part 
 @app.get('/tracks')
 async def get_tracks(page:int = 0, per_page:int = 10, status_code=200):
     app.db_connection.row_factory = sqlite3.Row
     tracks = app.db_connection.execute(f'SELECT * FROM tracks ORDER BY TrackId LIMIT {per_page * (page)}, {per_page}').fetchall()
     return tracks
 
-# second part
+# 2 part
 @app.get('/tracks/composers')
 async def get_composer_tracks(composer_name:str, status_code=200):
     app.db_connection.row_factory = lambda cursor, x: x[0]
@@ -46,7 +46,7 @@ async def get_composer_tracks(composer_name:str, status_code=200):
         return JSONResponse(status_code=404, content={'detail': {'error': f'No tracks for composer {composer_name}'}}) 
     return tracks
  
-# third part
+# 3 part
 @app.post('/albums')
 async def add_album(album:Album):
     app.db_connection.row_factory = sqlite3.Row
@@ -66,17 +66,21 @@ async def get_album_by_id(id:int, status_code=200):
         return JSONResponse(status_code=404, content={'detail': {'error': f'No album with id: {id}'}}) 
     return album
 
-# fourth part 
-# @app.post('/customers/{customer_id}')
-# async def edit_customer(id:int, customer:Customer, status_code=200):
-#     app.db_connection.row_factory = sqlite3.Row
-#     cursor = app.db_connection.cursor()
-#     client = cursor.execute(f'select name from customers where CustomerId = {id}').fetchone()
-#     if client:
-#         print(customer)
-#         #cursor.execute(f'update albums set (Title, ArtistId) values ("{customer.title}", {customer})')
-#         #app.db_connection.commit()
+# 4 part 
+@app.put("/customers/{customer_id}")
+async def edit_customer(customer:Customer, customer_id:int):
+    app.db_connection.row_factory = sqlite3.Row
+    cursor = app.db_connection.cursor()
+    name = cursor.execute(f'select CustomerId from customers where CustomerId = {customer_id}').fetchone()
+    if not name:
+        return JSONResponse(status_code=404, content={'detail': {'error': f'No customer with id: {customer_id}'}}) 
+    for k, v in customer.__dict__.items():
+        if v:
+            cursor.execute(f'update customers set {k} = "{v}" where CustomerId = {customer_id}')
+            app.db_connection.commit()
+    return cursor.execute(f'select * from customers where CustomerId={customer_id}').fetchone()
 
+# 5/6 part 
 @app.get('/sales')
 async def get_statistics_by_category(category:str, status_code=200):
     app.db_connection.row_factory = sqlite3.Row
