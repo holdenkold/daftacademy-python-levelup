@@ -76,3 +76,24 @@ async def get_album_by_id(id:int, status_code=200):
 #         print(customer)
 #         #cursor.execute(f'update albums set (Title, ArtistId) values ("{customer.title}", {customer})')
 #         #app.db_connection.commit()
+
+@app.get('/sales')
+async def get_statistics_by_category(category:str, status_code=200):
+    app.db_connection.row_factory = sqlite3.Row
+    if category == 'customers':
+        data = app.db_connection.execute('''
+        SELECT c.CustomerId, c.Email, c.Phone, round(sum(i.Total), 2) as Sum FROM customers as c
+        JOIN invoices as i ON i.CustomerId = c.CustomerId
+        group by c.CustomerId
+        ORDER BY Sum DESC, c.CustomerId;
+        ''').fetchall()
+    elif category == 'genres':
+        data = app.db_connection.execute('''
+        SELECT c.CustomerId, c.Email, c.Phone, round(sum(i.Total), 2) as Sum FROM customers as c
+        JOIN invoice as i ON i.CustomerId = c.CustomerId
+        group by CustomerId
+        ORDER BY Sum DESC, c.CustomerId;
+        ''').fetchall()
+    else:
+        return JSONResponse(status_code=404, content={'detail': {'error': f'Unnown category'}}) 
+    return data
